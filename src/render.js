@@ -464,6 +464,28 @@ export function createRenderer(canvas) {
 
     drawEffects(state.particles || [], state.popups || []);
 
+    // Rychlostní čáry při Turbu
+    if (state.plane.turboActive && state.mode === "playing") {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 6; i++) {
+        const ly = ((i * 113 + Math.floor(timeSec * 360)) % (WORLD.height - 140)) + 70;
+        const lx = ((i * 271 - Math.floor(timeSec * 1400)) % WORLD.width + WORLD.width) % WORLD.width;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly);
+        ctx.lineTo(lx + 75, ly);
+        ctx.stroke();
+      }
+    }
+
+    // Výstraha při nízkém palivu
+    if (state.mode === "playing" && state.stats.fuel <= 25) {
+      const pulse = 0.08 + 0.08 * Math.sin(timeSec * 8);
+      ctx.strokeStyle = `rgba(239, 68, 68, ${(pulse + 0.16).toFixed(2)})`;
+      ctx.lineWidth = 14;
+      ctx.strokeRect(0, 0, WORLD.width, WORLD.height);
+    }
+
     ctx.restore();
   }
 
