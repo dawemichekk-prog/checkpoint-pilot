@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Checkpoint Pilot — arkádová letecká hra v prohlížeči. Prolétávej kruhovými branami, sbírej palivo a combo násobiče." />
+  <title>Checkpoint Pilot — Letecká arkáda</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <div class="stage" id="gameStage">
+      <canvas id="gameCanvas" aria-label="Herní plocha Checkpoint Pilot"></canvas>
+
+      <!-- Herní HUD -->
+      <header class="hud hidden" id="hud" aria-live="polite">
+        <div class="hud-left">
+          <div class="hud-card fuel-card">
+            <div class="hud-label-row">
+              <span>PALIVO</span>
+              <span id="hudFuelText" class="tabular">100%</span>
+            </div>
+            <div class="fuel-track">
+              <div class="fuel-fill" id="hudFuelBar"></div>
+            </div>
+          </div>
+
+          <div class="hud-card stats-pill">
+            <div class="hearts" id="hudLives" aria-label="Životy"></div>
+            <div class="power-badges" id="hudPowerups"></div>
+          </div>
+        </div>
+
+        <div class="hud-center">
+          <div class="hud-card score-card">
+            <div class="score-main">
+              <span id="hudScore" class="tabular">0</span>
+              <span id="hudCombo" class="combo-badge">×1</span>
+            </div>
+            <div class="score-sub tabular">
+              <span id="hudDistance">0 m</span>
+              <span class="dot">•</span>
+              <span id="hudCheckpoints">0 bran</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="hud-card level-card">
+            <span id="hudLevel">Úroveň 1</span>
+            <span id="hudTimeOfDay" class="time-label">Den</span>
+          </div>
+          <button id="muteBtn" class="icon-btn" type="button" title="Ztlumit / zapnout zvuk" aria-label="Zvuk">🔊</button>
+          <button id="pauseBtn" class="icon-btn" type="button" title="Pauza (P / Esc)" aria-label="Pauza">⏸</button>
+        </div>
+      </header>
+
+      <!-- Mobilní tlačítko Turbo -->
+      <button id="touchTurboBtn" class="touch-turbo hidden" type="button" aria-label="Turbo">
+        TURBO
+      </button>
+
+      <!-- Menu overlay -->
+      <section class="overlay" id="menuOverlay">
+        <div class="panel">
+          <p class="eyebrow">2D ARKÁDOVÝ LET</p>
+          <h1>Checkpoint Pilot</h1>
+          <p class="lead">
+            Prolétávej kruhovými branami, udržuj combo a hlídej palivo — každá brána ti dolije nádrž.
+          </p>
+
+          <div class="record-strip">
+            <span>Nejlepší skóre</span>
+            <strong id="menuHighScore" class="tabular">0</strong>
+          </div>
+
+          <div class="controls-grid">
+            <div class="control-item">
+              <kbd>↑</kbd> / <kbd>W</kbd> / <kbd>Mezerník</kbd>
+              <span>Stoupat (nebo držet prst na displeji)</span>
+            </div>
+            <div class="control-item">
+              <kbd>↓</kbd> / <kbd>S</kbd>
+              <span>Klesat (pustit prst pro plachtění)</span>
+            </div>
+            <div class="control-item">
+              <kbd>Shift</kbd>
+              <span>Turbo (3× spotřeba paliva)</span>
+            </div>
+            <div class="control-item">
+              <kbd>P</kbd> / <kbd>Esc</kbd>
+              <span>Pauza</span>
+            </div>
+          </div>
+
+          <div class="legend-row">
+            <span>🎯 Střed brány = PERFECT (+250 b.)</span>
+            <span>🛡️ Štít</span>
+            <span>⛽ Kanystr</span>
+            <span>🧲 Magnet</span>
+          </div>
+
+          <div class="actions">
+            <button id="startBtn" class="btn-primary" type="button">Vzlétnout</button>
+            <button id="menuMuteBtn" class="btn-secondary" type="button">Zvuk: Zapnutý</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pauza overlay -->
+      <section class="overlay hidden" id="pauseOverlay">
+        <div class="panel panel-compact">
+          <p class="eyebrow">LET POZASTAVEN</p>
+          <h2>Pauza</h2>
+          <p class="lead">Chvíle na nadechnutí. Motor čeká na povel.</p>
+          <div class="actions">
+            <button id="resumeBtn" class="btn-primary" type="button">Pokračovat</button>
+            <button id="restartFromPauseBtn" class="btn-secondary" type="button">Nový let</button>
+            <button id="toMenuFromPauseBtn" class="btn-secondary" type="button">Hlavní menu</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game Over overlay -->
+      <section class="overlay hidden" id="gameOverOverlay">
+        <div class="panel">
+          <p class="eyebrow" id="gameOverReason">KONEC LETU</p>
+          <h2>Přistání!</h2>
+          <div id="newRecordBanner" class="new-record hidden">NOVÝ REKORD!</div>
+
+          <div class="summary-grid">
+            <div class="stat-box">
+              <span>Skóre</span>
+              <strong id="finalScore" class="tabular">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>Nejlepší</span>
+              <strong id="finalBest" class="tabular">0</strong>
+            </div>
+            <div class="stat-box">
+              <span>Vzdálenost</span>
+              <strong id="finalDistance" class="tabular">0 m</strong>
+            </div>
+            <div class="stat-box">
+              <span>Brány (PERFECT)</span>
+              <strong id="finalGates" class="tabular">0 (0)</strong>
+            </div>
+            <div class="stat-box">
+              <span>Max combo</span>
+              <strong id="finalCombo" class="tabular">×1</strong>
+            </div>
+            <div class="stat-box">
+              <span>Dosažená úroveň</span>
+              <strong id="finalLevel" class="tabular">1</strong>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="retryBtn" class="btn-primary" type="button">Letět znovu</button>
+            <button id="toMenuBtn" class="btn-secondary" type="button">Hlavní menu</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
