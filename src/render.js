@@ -141,8 +141,9 @@ export function createRenderer(canvas) {
       const b = points[i + 1];
       const mx = (a.x + b.x) * 0.5;
       const mh = (a.h + b.h) * 0.5;
+      const puffR = 26 + ((i * 7) % 5) * 3;
       ctx.beginPath();
-      ctx.arc(mx, mh - 4, 28, 0, Math.PI);
+      ctx.arc(mx, mh - 6, puffR, 0, Math.PI);
       ctx.fill();
     }
 
